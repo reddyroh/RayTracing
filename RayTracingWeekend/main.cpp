@@ -20,6 +20,7 @@ int main() {
 	cam.image_width = 400;
 	cam.samples_per_pixel = 100;
 	cam.max_depth = 50;
+	cam.diffuse_reflectance = 0.5;
 
 	cam.render(world, "image.ppm");
 
