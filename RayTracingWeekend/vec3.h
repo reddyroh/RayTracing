@@ -130,4 +130,10 @@ inline vec3 reflect(const vec3& v, const vec3& normal) {
 	return v + 2 * dot(-v, normal) * normal;
 }
 
+inline vec3 refract(const vec3& v, const vec3& normal, double refraction_ratio) {
+	double cos_theta = fmin(1.0, dot(-v, normal));
+	vec3 r_out_perpendicular = refraction_ratio * (v + cos_theta * normal);
+	vec3 r_out_parallel = -sqrt(fabs(1 - r_out_perpendicular.length_squared())) * normal;
+	return r_out_perpendicular + r_out_parallel;
+}
 
