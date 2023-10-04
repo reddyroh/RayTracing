@@ -50,6 +50,12 @@ public:
 		return sqrt(length_squared());
 	}
 
+	bool near_zero() const {
+		// Return true if the vector is near zero in all dimensions
+		double s = 1e-8;
+		return (fabs(e[0]) < s) && (fabs(e[1]) < s) && (fabs(e[2]) < s);
+	}
+
 	static vec3 random() {
 		return vec3(random_double(), random_double(), random_double());
 	}
@@ -118,6 +124,10 @@ inline vec3 random_on_hemisphere(const vec3& normal) {
 	vec3 on_unit_sphere = random_on_unit_sphere();
 	// If the dot product is negative we are on the wrong hemisphere, but can get onto the right one by inverting the surface normal.
 	return (dot(on_unit_sphere, normal) > 0.0) ? on_unit_sphere : -on_unit_sphere;
+}
+
+inline vec3 reflect(const vec3& v, const vec3& normal) {
+	return v + 2 * dot(-v, normal) * normal;
 }
 
 

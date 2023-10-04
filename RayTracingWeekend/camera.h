@@ -6,6 +6,7 @@
 
 #include "color.h"
 #include "hittable.h"
+#include "material.h"
 
 
 class camera {
@@ -15,7 +16,6 @@ public:
 	int image_width = 400;				// Rendered image width in pixel count
 	int samples_per_pixel = 10;			// Count of random samples for each pixel
 	int max_depth = 10;					// Maximum number of ray bounces into scene
-	double diffuse_reflectance = 0.5;	// Reflectance percentage of diffuse material
 
     void render(const hittable& world, std::string filename) {
 
@@ -108,8 +108,12 @@ private:
 		// originated from a bounce off the surface of the sphere, that then goes on to intersect the inside of the sphere
 		// immediately. To avoid this we specify we must have traveled for at least some non-neglible t to count the intersection.
 		if (world.hit(r, interval(0.001, infinity), rec)) {
-			vec3 direction = rec.normal + random_on_unit_sphere();
-			return diffuse_reflectance * ray_color(ray(rec.p, direction), depth - 1, world);
+			ray scattered;
+			color attenuation;
+			if (rec.mat->scatter(r, rec, attenuation, scattered)) {
+				return attenuation * ray_color(scattered, depth - 1, world);
+			}
+			return color(0, 0, 0);
 		}
 
 		// normalize y-values to range [0,1]
