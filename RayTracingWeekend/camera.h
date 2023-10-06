@@ -22,6 +22,9 @@ public:
 	point3 lookat = point3(0, 0, -1);	// Point camera is looking at
 	vec3 vup = point3(0, 1, 0);			// Camera-relative "up" direction
 
+	double defocus_angle = 0;			// Variation angle of rays through each pixel
+	double focus_dist = 10;				// Distance from camera center (lookfrom) to plane of perfect focus
+
     void render(const hittable& world, std::string filename) {
 
 		initialize();
@@ -79,6 +82,8 @@ private:
 	vec3 pixel_delta_u;		// Offset to pixel to the right
 	vec3 pixel_delta_v;		// Offset to pixel below
 	vec3 u, v, w;			// Camera frame basis vectors. We use right-handed coordinates so w will point opposite the view direction, u right, v up.
+	vec3 defocus_disk_u;	// Defocus disk horizontal radius
+	vec3 defocus_disk_v;	// Defocus disk vertical radius
 
     void initialize() {
 		image_height = static_cast<int>(image_width / aspect_ratio);
@@ -86,10 +91,9 @@ private:
 		camera_center = lookfrom;
 
 		// Determine viewport dimensions
-		double focal_length = (lookat - lookfrom).length();
 		double theta = degrees_to_radians(vertical_fov);
 		double h = tan(theta / 2);
-		double viewport_height = 2 * h * focal_length;
+		double viewport_height = 2 * h * focus_dist;
 
 		// We don't use aspect_ratio because aspect_ratio used real-valued numbers and in actual image width and height we rounded
 		double viewport_width = viewport_height * (static_cast<double>(image_width) / image_height);
@@ -105,11 +109,16 @@ private:
 		pixel_delta_u = viewport_u / image_width;
 		pixel_delta_v = viewport_v / image_height;
 
-		// Calculate location of upper left corner of the viewport. Subtracting focal length points us further into the screen.
-		point3 viewport_upper_left = camera_center - (focal_length * w) - viewport_u / 2 - viewport_v / 2;
+		// Calculate location of upper left corner of the viewport. Subtracting z-value points us further into the screen.
+		point3 viewport_upper_left = camera_center - (focus_dist * w) - viewport_u / 2 - viewport_v / 2;
 
 		// The location of the upper left pixel should be in the center of its grid square, not on a viewport corner.
 		pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
+
+		// Calculate defocus disk basis vectors
+		double defocus_disk_radius = focus_dist * tan(degrees_to_radians(defocus_angle / 2));
+		defocus_disk_u = defocus_disk_radius * u;
+		defocus_disk_v = defocus_disk_radius * v;
     }
 
 	color ray_color(const ray& r, int depth, const hittable& world) {
@@ -141,9 +150,15 @@ private:
 		point3 pixel_center = pixel00_loc + (i * pixel_delta_u) + (j * pixel_delta_v);
 		point3 pixel_sample = pixel_center + pixel_sample_square();
 
-		vec3 ray_direction = pixel_sample - camera_center;
+		vec3 ray_origin = (defocus_angle > 0) ? defocus_disk_sample() : camera_center;
+		vec3 ray_direction = pixel_sample - ray_origin;
 
-		return ray(camera_center, ray_direction);
+		return ray(ray_origin, ray_direction);
+	}
+
+	point3 defocus_disk_sample() const {
+		point3 sample = random_in_unit_disk();
+		return camera_center + sample.x * defocus_disk_u + sample.y * defocus_disk_v;
 	}
 
 	vec3 pixel_sample_square() const {
