@@ -21,7 +21,7 @@ int main() {
 	world.add(make_shared<sphere>(point3(0.0, -100.5, -1.0), 100.0, material_ground));
 	world.add(make_shared<sphere>(point3(0.0, 0.0, -1.0), 0.5, material_center));
 	world.add(make_shared<sphere>(point3(-1.0, 0.0, -1.0), 0.5, material_left));
-	world.add(make_shared<sphere>(point3(-1.0, 0.0, -1.0), -0.45, material_left));
+	world.add(make_shared<sphere>(point3(-1.0, 0.0, -1.0), -0.4, material_left));
 	world.add(make_shared<sphere>(point3(1.0, 0.0, -1.0), 0.5, material_right));
 
 	camera cam;
@@ -30,6 +30,11 @@ int main() {
 	cam.image_width = 400;
 	cam.samples_per_pixel = 100;
 	cam.max_depth = 50;
+
+	cam.vertical_fov = 20;
+	cam.lookfrom = point3(-2, 2, 1);
+	cam.lookat = point3(0, 0, -1);
+	cam.vup = vec3(0, 1, 0);
 
 	cam.render(world, "image.ppm");
 
